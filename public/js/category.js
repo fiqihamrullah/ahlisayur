@@ -1,0 +1,145 @@
+var table;
+var save_method; //for save method string
+var myData ={};
+ 
+
+jQuery(function()
+{
+    myData._token = $('meta[name="csrf-token"]').attr('content');      
+
+    $("#btnAdd").on('click',function() 
+    {         
+        save_method = 'add';  
+        $('#modalCategory').modal('show');        
+        resetValidation();
+        $('#formCategory')[0].reset();                
+        $('.modal-title').text('Tambahkan Kategori');   
+    });
+
+    
+ 
+    $(document).on('click', '.delete-modal', function() 
+    {
+      var id = $(this).data('id');
+
+
+      Swal.fire({
+        title: 'Apa kamu yakin?',
+        text: 'Kamu akan menghapusnya?!',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ya, hapus saja!',
+        cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) 
+            {         
+                showLoading();
+                deleteCategory(id);        
+            }  
+        });       
+
+
+      });
+
+
+     
+
+});
+
+
+function reloadTable()
+{      
+   table = $("#table").DataTable();     
+   table.draw(false);
+}
+
+
+
+function save()
+{
+
+  var url,method;
+  url ="category";
+  method = "POST";
+
+  var formData = new FormData($("#formCategory")[0]); 
+
+  if(save_method == 'edit')
+     {
+        
+         url += "/" + $('[name="id"]').val();// + "?_method=PUT";        
+         formData.append('_method', 'PUT');
+   }   
+   
+
+   if ($("#formCategory").valid())
+   {
+    
+          $.ajax({
+            headers: {
+                'X-CSRF-TOKEN':  myData._token
+            },
+            url : url,
+            method: method,
+            data: formData,    
+            processData: false,
+            contentType: false,
+            beforeSend: showLoading(),     
+            success: function(response)
+            { 
+                doneLoading();         
+                toastr.success(response.message);       
+                $('#modalCategory').modal('hide');  
+                reloadTable();            
+                resetValidation();
+              
+              
+              
+            },
+            error: function (jqXHR, textStatus, errorThrown)
+            {               
+                console.log(jqXHR.responseText);
+                showErrors(jqXHR.responseText);
+              
+            }
+        }); 
+   }
+
+}  
+
+
+function deleteCategory(id)
+{
+     $.ajax({
+                      type: 'delete',
+                      url: 'category/' + id,
+                      data: {
+                        '_token': myData._token                       
+                      },
+                      success: function(response) 
+                      {
+                              
+                              doneLoading(); 
+                              Swal.fire({                              
+                                icon: 'success',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                              });
+                         
+
+                            reloadTable();
+                         
+                      },
+                            error: function (jqXHR, textStatus, errorThrown)
+                            {
+                              console.log(jqXHR.responseText);
+                            }
+
+                    }); 
+}
+
+
+
+
+
