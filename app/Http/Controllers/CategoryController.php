@@ -100,66 +100,58 @@ class CategoryController extends Controller
 
     public function load(Request $request)
     {
-        $totalFilteredRecord = $totalDataRecord = $draw_val = "";
+        $draw = $request->post('draw');
+        $start = $request->post("start");
+        $rowperpage = $request->post("length");  
 
-        $columns_list = array( 
-                           0 =>'id', 
-                           1 =>'name'                     
-                            );
+        $order = $request->post('order');        
+        $columnName_arr = $request->post('columns');
+
+        $search_arr = $request->post('search');
+
+        $columnIndex = $order[0]['column'];  
+        $columnName = $columnName_arr[$columnIndex]['data'];  
+        $columnSortOrder = $order[0]['dir'];  
+        
+        $searchValue = $search_arr['value'];  
+
+
+        $totalFilteredRecord = $totalDataRecord = $draw_val = "";       
  
          $totalDataRecord = Category::count();         
-         $totalFilteredRecord = $totalDataRecord; 
-       
-         $limit_val = $request->input('length');
-         $start_val = $request->input('start');
-         $order_val = $columns_list[$request->input('order.0.column')];
-         $dir_val = $request->input('order.0.dir');
+         $category = Category::query();
                
-         if(empty($request->input('search.value')))
+         if(!empty($searchValue))
          {                             
-             $category = Category::orderBy("name","asc");
-             $totalFilteredRecord = $category->count();            
-         }
-         else 
-         {
-
-              $search_text = $request->input('search.value');              
-              $category  = Category::filter($search_text);
-                            
-              $totalFilteredRecord = $category->count();      
-       
-             
+          
+              $category  = $category->where("name","like","%" . $searchValue . "%");           
 
           }
 
+          $totalFilteredRecord = $category->count();   
 
-          $category_data = $category->offset($start_val)
-                           ->limit($limit_val)
-                           ->orderBy($order_val,$dir_val)
+
+          $records = $category->offset($start)
+                           ->limit($rowperpage)                          
                            ->get();
+                           // ->orderBy($columnName,$columnSortOrder)
 
 
        
-          $data_val = array();
-          if(!empty($category_data))
+         
+          if(!empty($records))
           {
               $no = 0;
-              foreach ($category_data as $val)
+              foreach ($records as $val)
               {                 
-                  $data['number'] = $start_val + ($no+1);
-                  $data['id'] =  $val->id;
-                  $data['name'] =  $val->name;    
-   
-
-
-                 $btnEdit = '<button class="edit-modal btn btn-xs btn-success text-default mx-1  " title="' . __('common.button_perbaiki') . '" data-id="' . $val->id . '" data-title="{$val->name}" data-description="{$val->name}">
+                            
+                  $records[$no]["number"]  = $start + ($no+1); 
+                
+                  $btnEdit = '<button class="edit-modal btn btn-xs btn-success text-default mx-1  " title="' . __('common.button_perbaiki') . '" data-id="' . $val->id . '" data-title="{$val->name}" data-description="{$val->name}">
                  <i class="fas fa-lg fa-fw fa-pen"></i></button>';
-                 $btnDelete = '<button class="delete-modal btn btn-xs btn-success text-default mx-1  " title="' .  __('common.button_hapus') . '" data-id="' . $val->id . '" data-title="{$val->name}" data-description="{$val->name}">
+                  $btnDelete = '<button class="delete-modal btn btn-xs btn-success text-default mx-1  " title="' .  __('common.button_hapus') . '" data-id="' . $val->id . '" data-title="{$val->name}" data-description="{$val->name}">
                                    <i class="fas fa-lg fa-fw fa-trash"></i></button>';
-                                   /*
-                 $btnDetails = '<button class="show-detail-modal btn btn-xs btn-success text-warning mx-1  " data-id="' . $val->id . '" data-title="{$val->name}" data-description="{$val->name}" title="' . __('common.button_detail')   . '">
-                                   <i class="far fa-lg fa-fw fa-eye"></i>
-                               </button>'; */
+                                
 
                  /* if ($val->orders_count>0)
                   {
@@ -167,23 +159,25 @@ class CategoryController extends Controller
                   }*/
 
 
-                  $data['aksi'] = $btnEdit . $btnDelete;// . $btnDetails; 
+                  $records[$no]["aksi"]= $btnEdit . $btnDelete;// . $btnDetails; 
                  
-                  $data_val[] = $data;       
+             
                   $no++;
               }
           }
 
-          $draw_val = $request->input('draw');  
-          $response = array(
-              "draw"            => intval($draw_val),  
-              "recordsTotal"    => intval($totalDataRecord),  
-              "recordsFiltered" => intval($totalFilteredRecord), 
-              "data"            => $data_val  
-              );
+ 
                
-        
-         return response()->json($response);
+              $records = $records->sortBy([[$columnName, $columnSortOrder]]);
+
+              $response = array(
+                  "draw" => intval($draw),
+                  "iTotalRecords" => $totalDataRecord,
+                  "iTotalDisplayRecords" => $totalFilteredRecord,
+                  "aaData" => $records,
+              );
+  
+              return response()->json($response);
         
     }
 
