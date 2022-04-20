@@ -169,7 +169,7 @@ class ProductController extends Controller
 
 
        
-          $data_val = array();
+         
           if(!empty($records))
           {
               $no = 0;

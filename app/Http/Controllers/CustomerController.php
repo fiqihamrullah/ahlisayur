@@ -33,7 +33,7 @@ class CustomerController extends Controller
             'processing' => true,
             'ajax' => ["url" => "/customer/load","type" => "POST","data" => ["_token" =>  csrf_token() ]], 
             'order' => [[1, 'asc']],
-            'columns' => [["data" => "number"],                       
+            'columns' => [["data" => "no"],                       
                           ["data" => "name"],                        
                           ["data" => "phone_number"],  
                           ["data" => "address"],  
@@ -141,31 +141,31 @@ class CustomerController extends Controller
 
 
         $totalDataRecord = Customer::count();
-        $totalFilteredRecord = $totalDataRecord; 
+     
 
         $customers = Customer::query();
 
-        $customers = $customers->orderby($columnName,$columnSortOrder);
-        $customers =  $customers->where("name","like","%" . $searchValue  . "%")
-                                ->orWhere("phone_number","like","%" . $searchValue  . "%")
-                                ->orWhere("email","like","%" . $searchValue  . "%")
-                                ->skip($start)
-                               ->take($rowperpage)
-                               ->get();
+        if(!empty($searchValue))
+        {     
+            $customers =  $customers->where("name","like","%" . $searchValue  . "%")
+                                    ->orWhere("phone_number","like","%" . $searchValue  . "%")
+                                    ->orWhere("email","like","%" . $searchValue  . "%");
+        }
 
-  
-        $data_val =  array();
+        $totalFilteredRecord = $customers->count();                       
+
+        $records = $customers->skip($start)
+                             ->take($rowperpage)
+                             ->get();
+
+       
+   
 
         $no = 0;
 
-        foreach($customers as $customer)
+        foreach($records as $customer)
         {
-             $data['no'] = $no+1;
-             $data['ID'] = $customer->id;
-             $data['name'] = $customer->name;
-             $data['phone_number'] = $customer->phone_number;
-             $data['email'] = $customer->email; 
-             $data['address'] = $customer->address;
+             $records[$no]['no'] = $start + ($no+1);         
 
 
              $btnEdit = '<button class="btn-edit btn btn-xs btn-default text-primary mx-1 shadow" title="Edit" data-id="' .$customer->id.'">
@@ -181,9 +181,9 @@ class CustomerController extends Controller
           
 
 
-             $data['aksi'] = $btnEdit .  $btnDelete  . $btnDetails ;
+             $records[$no]['aksi'] = $btnEdit .  $btnDelete  . $btnDetails ;
 
-             $data_val[] = $data; 
+        
               
              $no++;
 
@@ -191,15 +191,16 @@ class CustomerController extends Controller
 
 
         
-        $draw_val = $request->input('draw');  
-        $get_json_data = array(
-            "draw"            => intval($draw_val),  
-            "recordsTotal"    => intval($totalDataRecord),  
-            "recordsFiltered" => intval($totalFilteredRecord), 
-            "data"            => $data_val  
-            );
-             
-        echo json_encode($get_json_data); 
+        $records = $records->sortBy([[$columnName, $columnSortOrder]]);
+
+           $response = array(
+                  "draw" => intval($draw),
+                  "iTotalRecords" => $totalDataRecord,
+                  "iTotalDisplayRecords" => $totalFilteredRecord,
+                  "aaData" => $records,
+              );
+  
+           return response()->json($response);
 
     }
 

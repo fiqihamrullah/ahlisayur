@@ -26,8 +26,8 @@
         <br/>
         {{-- Tabel --}}
         <div class="row">
-                <x-adminlte-datatable id="table" :heads="$heads" :config="$config"   head-theme="dark" class="bg-light" 
-                    striped hoverable with-footer footer-theme="dark" beautify/>
+                <x-adminlte-datatable id="table" :heads="$heads" :config="$config"   head-theme="light" theme="light"
+                    striped hoverable with-footer footer-theme="light" beautify/>
 
         </div>
     
