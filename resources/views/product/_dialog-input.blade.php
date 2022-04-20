@@ -48,6 +48,15 @@
         </x-slot>
     </x-adminlte-input>
 
+    <x-adminlte-textarea name="desc" label="{{ __('validation.attributes.desc') }}" rows=5 label-class="text-lightblue"
+                                igroup-size="sm" placeholder="{{ __('validation.attributes.desc') }}">
+                                    <x-slot name="prependSlot">
+                                        <div class="input-group-text  ">
+                                            <i class="fas  fa-file-alt text-lightblue"></i>
+                                        </div>
+                                    </x-slot>
+    </x-adminlte-textarea>
+
 
     <x-adminlte-input-file name="picture_path" id="picture_path" igroup-size="lg" placeholder="{{ __('messages.pilih_file_gambar') }}"  label="{{ __('validation.attributes.picture_path') }}" label-class="text-lightblue">
                                     <x-slot name="prependSlot">

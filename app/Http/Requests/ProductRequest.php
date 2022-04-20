@@ -30,6 +30,7 @@ class ProductRequest extends FormRequest
             'price' => 'required|integer',  
             'picture_path' => 'nullable|file|image',
             'unit' => 'required|string',  
+            'desc' => 'nullable',  
         ];
     }
 }

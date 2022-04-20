@@ -36,7 +36,7 @@ class ProductController extends Controller
             'ajax' => ["url" => "/product/load","type" => "POST","data" => ["_token" =>  csrf_token() ]], 
             'order' => [[1, 'asc']],
             'columns' => [["data" => "number"], 
-                          ["data" => "category"],                       
+                          ["data" => "category_name"],                       
                           ["data" => "name"],                  
                           ["data" => "price"],   
                           ["data" => "unit"],   
@@ -175,10 +175,10 @@ class ProductController extends Controller
               $no = 0;
               foreach ($records as $val)
               {                 
-                  $records[$no]['number'] = $start_val + ($no+1);                  
-                  $records[$no]['category'] =  $val->category->name;  
+                  $records[$no]['number'] = $start + ($no+1);                  
+                  $records[$no]['category_name'] =  $val->category->name;  
                   
-                  $records[$no]['picture'] = "<a id='photo_profile'   title='{$val->name}' href='" . url('/'). "/foto_produk/" . $val->picture_path . "'><img src='" . url('/') . "/foto_produk/$val->picture_path' width='180' class='img-circle' /></a>";   
+                  $records[$no]['picture'] = "<a id='photo_profile'   title='{$val->name}' href='" . url('/'). "/foto_produk/" . $val->picture_path . "'><img src='" . url('/') . "/foto_produk/$val->picture_path' width='180' class='img-rounded' /></a>";   
    
 
 
