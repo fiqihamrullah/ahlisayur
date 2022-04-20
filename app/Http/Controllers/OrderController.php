@@ -20,6 +20,7 @@ class OrderController extends Controller
             'Order No',  
             __('validation.attributes.name'),         
             __('validation.attributes.phone_number'),    
+            'Jumlah Item',    
             __('validation.attributes.status'),              
             ['label' => __('common.kolom_aksi'), 'no-export' => true, 'width' => 10],
         ];
@@ -30,10 +31,11 @@ class OrderController extends Controller
             'processing' => true,
             'ajax' => ["url" => "/order/load","type" => "POST","data" => ["_token" =>  csrf_token() ]], 
             'order' => [[1, 'asc']],
-            'columns' => [["data" => "number"],                       
+            'columns' => [["data" => "no"],                       
                           ["data" => "order_no"],                        
-                          ["data" => "name"],  
-                          ["data" => "phone_number"],  
+                          ["data" => "customer.name"],  
+                          ["data" => "customer.phone_number"],  
+                          ["data" => "jumlah"],  
                           ["data" => "status"],  
                           ["data" => "aksi" ,'orderable' => false]],
         ];
@@ -134,35 +136,38 @@ class OrderController extends Controller
 
 
         $totalDataRecord = Order::count();
-        $totalFilteredRecord = $totalDataRecord; 
+     
 
-        $orders = Order::query();
+        $orders = Order::query()->with('customer');
 
-        $orders = $orders->orderby($columnName,$columnSortOrder);
-        $orders =  $orders->where("order_no","like","%" . $searchValue  . "%")                             
-                                ->skip($start)
-                                ->take($rowperpage)
-                                ->get();
+        if(!empty($searchValue))
+        {     
+            $orders =  $orders->where("order_no","like","%" . $searchValue  . "%");
+                                   
+        }
 
-  
-        $data_val =  array();
+        $totalFilteredRecord = $orders->count();                       
+
+        $records = $orders->skip($start)
+                             ->take($rowperpage)
+                             ->get();
+
+       
+   
 
         $no = 0;
 
-        foreach($orders as $order)
+        foreach($records as $order)
         {
-             $data['no'] = $no+1;
-             $data['ID'] = $customer->id;
-             $data['name'] = $customer->name;
-             $data['phone_number'] = $customer->phone_number;
-             $data['email'] = $customer->email; 
-             $data['address'] = $customer->address;
+             $records[$no]['no'] = $start + ($no+1);    
+             
+             $records[$no]['jumlah']  = 2;
 
 
-             $btnEdit = '<button class="btn-edit btn btn-xs btn-default text-primary mx-1 shadow" title="Edit" data-id="' .$customer->id.'">
+             $btnEdit = '<button class="btn-edit btn btn-xs btn-default text-primary mx-1 shadow" title="Edit" data-id="' .$order->id.'">
              <i class="fa fa-lg fa-fw fa-pen"></i>
                         </button>';
-                $btnDelete = '<button class="btn-delete btn btn-xs btn-default text-danger mx-1 shadow" title="Delete" data-id="' .$customer->id.'">
+                $btnDelete = '<button class="btn-delete btn btn-xs btn-default text-danger mx-1 shadow" title="Delete" data-id="' .$order->id.'">
                             <i class="fa fa-lg fa-fw fa-trash"></i>
                         </button>';
                 $btnDetails = '<button class="btn btn-xs btn-default text-teal mx-1 shadow" title="Details">
@@ -172,9 +177,9 @@ class OrderController extends Controller
           
 
 
-             $data['aksi'] = $btnEdit .  $btnDelete  . $btnDetails ;
+             $records[$no]['aksi'] = $btnEdit .  $btnDelete  . $btnDetails ;
 
-             $data_val[] = $data; 
+        
               
              $no++;
 
@@ -182,14 +187,15 @@ class OrderController extends Controller
 
 
         
-        $draw_val = $request->input('draw');  
-        $get_json_data = array(
-            "draw"            => intval($draw_val),  
-            "recordsTotal"    => intval($totalDataRecord),  
-            "recordsFiltered" => intval($totalFilteredRecord), 
-            "data"            => $data_val  
-            );
-             
-        echo json_encode($get_json_data); 
+        $records = $records->sortBy([[$columnName, $columnSortOrder]]);
+
+           $response = array(
+                  "draw" => intval($draw),
+                  "iTotalRecords" => $totalDataRecord,
+                  "iTotalDisplayRecords" => $totalFilteredRecord,
+                  "aaData" => $records,
+              );
+  
+           return response()->json($response);
     }
 }
