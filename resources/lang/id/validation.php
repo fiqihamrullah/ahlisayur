@@ -167,6 +167,7 @@ return [
         'email' => 'E-Mail',  
         'price' => 'Harga',  
         'qty' => 'Jumlah',  
+        'desc' => 'Deskripsi',  
         'status' => 'Status',  
 
 

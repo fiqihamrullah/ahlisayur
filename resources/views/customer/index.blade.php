@@ -19,7 +19,7 @@
               </div>
 
                 <div class="col-md-6  text-right">
-                    <x-adminlte-button class="btn-lg" id="btnAdd" type="button"  label="{{ __('common.button_tambah') }}" theme="success" icon="fas fa-lg fa-plus" /> 
+                    
                </div>
         </div>
 

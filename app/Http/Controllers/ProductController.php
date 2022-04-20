@@ -133,61 +133,52 @@ class ProductController extends Controller
 
     public function load(Request $request)
     {
-        $totalFilteredRecord = $totalDataRecord = $draw_val = "";
+        $draw = $request->post('draw');
+        $start = $request->post("start");
+        $rowperpage = $request->post("length");  
 
-        $columns_list = array( 
-                           0 =>'id', 
-                           1 =>'name'                     
-                            );
+        $order = $request->post('order');        
+        $columnName_arr = $request->post('columns');
+
+        $search_arr = $request->post('search');
+
+        $columnIndex = $order[0]['column'];  
+        $columnName = $columnName_arr[$columnIndex]['data'];  
+        $columnSortOrder = $order[0]['dir'];  
+        
+        $searchValue = $search_arr['value'];  
+
+
+        $totalFilteredRecord = $totalDataRecord = $draw_val = "";               
  
-         $totalDataRecord = Product::count();         
-         $totalFilteredRecord = $totalDataRecord; 
-       
-         $limit_val = $request->input('length');
-         $start_val = $request->input('start');
-         $order_val = $columns_list[$request->input('order.0.column')];
-         $dir_val = $request->input('order.0.dir');
-               
-         if(empty($request->input('search.value')))
+         $totalDataRecord = Product::count();  
+         $product = Product::query();    
+         
+         if(!empty($searchValue))
          {                             
-             $product = Product::orderBy("name","asc");
-             $totalFilteredRecord = $product->count();            
-         }
-         else 
-         {
-
-              $search_text = $request->input('search.value');              
-              $product  = Product::filter($search_text);
-                            
-              $totalFilteredRecord = $product->count();      
-       
-             
+          
+              $product  = $product->where("name","like","%" . $searchValue . "%");           
 
           }
 
+          $totalFilteredRecord = $product->count();
 
-          $product_data = $product->offset($start_val)
-                           ->limit($limit_val)
-                           ->orderBy($order_val,$dir_val)
+          $records = $product->offset($start)
+                           ->limit($rowperpage)                          
                            ->get();
 
 
        
           $data_val = array();
-          if(!empty($product_data))
+          if(!empty($records))
           {
               $no = 0;
-              foreach ($product_data as $val)
+              foreach ($records as $val)
               {                 
-                  $data['number'] = $start_val + ($no+1);
-                  $data['id'] =  $val->id;
-                  $data['name'] =  $val->name;    
-                  $data['category'] =  $val->category->name;  
-                  $data['price'] =  $val->price;
-                  $data['unit'] =  $val->unit;
-
-
-                  $data['picture'] = "<a id='photo_profile'   title='{$val->name}' href='" . url('/'). "/foto_produk/" . $val->picture_path . "'><img src='" . url('/') . "/foto_produk/$val->picture_path' width='180' class='img-circle' /></a>";   
+                  $records[$no]['number'] = $start_val + ($no+1);                  
+                  $records[$no]['category'] =  $val->category->name;  
+                  
+                  $records[$no]['picture'] = "<a id='photo_profile'   title='{$val->name}' href='" . url('/'). "/foto_produk/" . $val->picture_path . "'><img src='" . url('/') . "/foto_produk/$val->picture_path' width='180' class='img-circle' /></a>";   
    
 
 
@@ -206,22 +197,22 @@ class ProductController extends Controller
                   }*/
 
 
-                  $data['aksi'] = $btnEdit . $btnDelete;// . $btnDetails; 
-                 
-                  $data_val[] = $data;       
+                  $records[$no]['aksi'] = $btnEdit . $btnDelete;// . $btnDetails; 
+               
                   $no++;
               }
           }
 
-          $draw_val = $request->input('draw');  
-          $get_json_data = array(
-              "draw"            => intval($draw_val),  
-              "recordsTotal"    => intval($totalDataRecord),  
-              "recordsFiltered" => intval($totalFilteredRecord), 
-              "data"            => $data_val  
+          $records = $records->sortBy([[$columnName, $columnSortOrder]]);
+
+           $response = array(
+                  "draw" => intval($draw),
+                  "iTotalRecords" => $totalDataRecord,
+                  "iTotalDisplayRecords" => $totalFilteredRecord,
+                  "aaData" => $records,
               );
-               
-          echo json_encode($get_json_data); 
+  
+           return response()->json($response);
     }
 
 }
