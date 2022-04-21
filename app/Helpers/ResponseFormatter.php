@@ -24,8 +24,7 @@ class ResponseFormatter
      *
      * @var array
      */
-    protected static $response = [
-        'code' => null,
+    protected static $response = [        
         'status' => 'success',
         'message' => null,
         'data' => null,
@@ -36,7 +35,7 @@ class ResponseFormatter
      */
     public static function success($data = null, $message = null, $code = self::HTTPCODE_SUCCESS)
     {
-        self::$response['code'] = $code;
+       
         self::$response['message'] = $message;
         self::$response['data'] = $data;
 
@@ -51,7 +50,7 @@ class ResponseFormatter
      */
     public static function error($data = null, $message = null, $errors = null, $code = self::HTTPCODE_ERROR_BADREQUEST)
     {
-        self::$response['code'] = $code;
+       // self::$response['code'] = $code;
         self::$response['status'] = 'error';
         self::$response['message'] = $message;
         self::$response['data'] = $data;
